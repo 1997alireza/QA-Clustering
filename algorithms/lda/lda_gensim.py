@@ -2,17 +2,8 @@
 from xlrd import open_workbook
 import gensim
 from nltk.tokenize import RegexpTokenizer
-import matplotlib.pyplot as plt
-
-
-# q? Does lda model get TFIDF matrix too?
-
-
-def load_stop_words():
-    stopwords_file = open('persian-stopwords.txt', 'r', encoding='utf8')
-    stopwords = stopwords_file.read().split('\n')
-    stopwords_file.close()
-    return stopwords
+from tools import load_stop_words
+from cluster import Cluster
 
 
 def get_tokens(sheet):
@@ -47,17 +38,35 @@ def get_printable_answers_best_topic(model, train_bow_matrix, sheet):
     return res
 
 
-def make_lda_model(train_bow_matrix, test_bow_matrix, num_topics, id2word, sheet, tfidf_model=False, get_log=False):
+def get_clusters(model, train_bow_matrix, sheet):  # todo
+    clusters = []
+    for t in range(0, model.num_topics):
+        clusters.append(Cluster(model.show_topic(t)[0][0]))
+
+    for row in range(0, len(train_bow_matrix)):
+        text = str(sheet.cell(row, 1).value)
+        topic_possibilities = model[train_bow_matrix[row]]
+        best_psb = -1
+        best_topic = -1
+        for pair in topic_possibilities:
+            if pair[1] > best_psb:
+                best_topic = pair[0]
+                best_psb = pair[1]
+        clusters[best_topic].add_doc(text)
+    return clusters
+
+
+def make_lda_model(train_bow_matrix, test_bow_matrix, num_topics, id2word, sheet, tfidf_model=False,
+                   get_perplexity=False):
     train_matrix = get_tfidf_matrix(train_bow_matrix, id2word) if tfidf_model else train_bow_matrix
     test_matrix = get_tfidf_matrix(test_bow_matrix, id2word) if tfidf_model else test_bow_matrix
 
     lda_model = gensim.models.LdaModel(corpus=train_matrix, num_topics=num_topics, id2word=id2word, passes=20)
-    log_perplexity = lda_model.log_perplexity(test_matrix)
-    if get_log:
-        log = get_printable_answers_best_topic(lda_model, train_matrix, sheet)
-        return log, log_perplexity
+    clusters = get_clusters(lda_model, train_matrix, sheet)
+    if get_perplexity:
+        return clusters, lda_model.log_perplexity(test_matrix)
     else:
-        return log_perplexity
+        return clusters
 
 
 def get_tfidf_matrix(bow_matrix, id2word):
@@ -65,39 +74,40 @@ def get_tfidf_matrix(bow_matrix, id2word):
     return [tfidf_model[bow] for bow in bow_matrix]
 
 
-def calculate_perplexities(num_topics_range, tfidf_model=False, show_graph=False):
-    start_range = num_topics_range.start
-    end_range = num_topics_range.stop
-    print("---- calculate perplexities started! ----")
-    log_perplexities = []
-    topics_numbers = []
-    # for num_topics in num_topics_range:
-    num_topics = start_range
-    while num_topics < end_range:
-        print(num_topics, "\n")
-        topics_numbers.append(num_topics)
-        log_perplexities.append(make_lda_model(train_bow_matrix, test_bow_matrix, num_topics, dictionary, sheet,
-                                               tfidf_model))
-        if num_topics % 2 == 0:
-            num_topics += int(num_topics / 2)
-        else:
-            num_topics += int(num_topics / 2) + 1
-    topics_numbers.append(end_range)
-    log_perplexities.append(make_lda_model(train_bow_matrix, test_bow_matrix, end_range, dictionary, sheet,
-                                           tfidf_model))
-
-    if show_graph:
-        plt.plot(topics_numbers, log_perplexities)
-        plt.show()
-    return log_perplexities
+# def calculate_perplexities(num_topics_range, tfidf_model=False, show_graph=False):
+#     start_range = num_topics_range.start
+#     end_range = num_topics_range.stop
+#     print("---- calculate perplexities started! ----")
+#     log_perplexities = []
+#     topics_numbers = []
+#     # for num_topics in num_topics_range:
+#     num_topics = start_range
+#     while num_topics < end_range:
+#         print(num_topics, "\n")
+#         topics_numbers.append(num_topics)
+#         log_perplexities.append(make_lda_model(train_bow_matrix, test_bow_matrix, num_topics, dictionary, sheet,
+#                                                tfidf_model))
+#         if num_topics % 2 == 0:
+#             num_topics += int(num_topics / 2)
+#         else:
+#             num_topics += int(num_topics / 2) + 1
+#     topics_numbers.append(end_range)
+#     log_perplexities.append(make_lda_model(train_bow_matrix, test_bow_matrix, end_range, dictionary, sheet,
+#                                            tfidf_model))
+#
+#     if show_graph:
+#         plt.plot(topics_numbers, log_perplexities)
+#         plt.show()
+#     return log_perplexities
 
 
 train_bow_matrix, test_bow_matrix, dictionary, sheet = [None] * 4
 
 
-def main():
+def lda_gensim(path):
     global train_bow_matrix, test_bow_matrix, dictionary, sheet
-    wb = open_workbook('./QA-samples.xlsx')
+    # wb = open_workbook('./QA-samples.xlsx')
+    wb = open_workbook(path)
     sheet = wb.sheet_by_index(1)
     tokens_set = get_tokens(sheet)
     set_length = len(tokens_set)
@@ -112,9 +122,18 @@ def main():
     # log_perplexities = calculate_perplexities(range(1, 5000), show_graph=True, tfidf_model=True)
     # print(log_perplexities)
 
-    log, _ = make_lda_model(train_bow_matrix, test_bow_matrix, 10, dictionary, sheet, True, True)
-    print(log)
+    return make_lda_model(train_bow_matrix, test_bow_matrix, 10, dictionary, sheet, tfidf_model=False)
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    clusters = lda_gensim('./QA-samples.xlsx')
+    for x in clusters:
+        print(x.title, "\n\n\n")
+        i = 0
+        for d in x.documents:
+            print(d, "\n")
+            i += 1
+            if i > 6:
+                break
+
+        print("---------\n")
