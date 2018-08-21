@@ -25,7 +25,7 @@ def create_bow(df):
 
 
 def lda_scikit(path):
-    df = read_data(data_path)
+    df = read_data(path)
 
     bow, bow_feature_names, bow_tfidf = create_bow(df)
 
