@@ -31,5 +31,5 @@ def lda_scikit(path):
 
     lda = LatentDirichletAllocation(n_components =60, learning_method='batch').fit(bow)
     topic_to_docs = lda.transform(bow)
-
+    
     return topic_to_docs
