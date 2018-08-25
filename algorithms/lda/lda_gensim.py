@@ -38,7 +38,7 @@ def get_printable_answers_best_topic(model, train_bow_matrix, sheet):
     return res
 
 
-def get_clusters(model, train_bow_matrix, sheet):  # todo
+def get_clusters(model, train_bow_matrix, sheet):
     clusters = []
     for t in range(0, model.num_topics):
         clusters.append(Cluster(model.show_topic(t)[0][0]))

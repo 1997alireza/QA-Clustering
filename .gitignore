@@ -105,3 +105,4 @@ venv.bak/
 .idea
 *.xlsx
 *.png
+test*.py

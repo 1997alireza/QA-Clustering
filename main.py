@@ -1,10 +1,8 @@
-from algorithms.lda.lda import lda
+from algorithms.lda.lda import get_lda
+from tools import get_clusters
 
-clusters = lda('./QA-samples.xlsx')
+clusters = get_clusters(get_lda(True), './QA-samples.xlsx')
 top_n_docs = 8
 for x in clusters:
-    print(x.title, "\n\n\n")
-    for i in range(min(len(x.documents()), top_n_docs)):
-        print(x.documents[i], '\n')
-
+    x.print(top_n_docs)
     print("-------------\n")
