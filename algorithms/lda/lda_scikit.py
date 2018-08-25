@@ -8,13 +8,13 @@ from sklearn.decomposition import LatentDirichletAllocation
 from cluster import Cluster
 
 def read_data(data_path):
-    df = pd.read_csv(data_path)
+    df = pd.read_excel(data_path, sheet_name='preprocessed')
     df.fillna(' ', inplace=True)
     return df
 
 # Get the docs & make Bag of Words of them
 def create_bow(df):
-    docs =list( df.iloc[0:100,0])
+    docs =list( df.iloc[0:,0])
 
     count_vectorizer = CountVectorizer()
     docs_bag_of_words = count_vectorizer.fit_transform(docs)
