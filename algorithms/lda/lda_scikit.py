@@ -5,7 +5,7 @@ from pandas import DataFrame
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.decomposition import LatentDirichletAllocation
-
+from cluster import Cluster
 
 def read_data(data_path):
     df = pd.read_csv(data_path)
@@ -14,7 +14,7 @@ def read_data(data_path):
 
 # Get the docs & make Bag of Words of them
 def create_bow(df):
-    docs =list( df.iloc[0:,0])
+    docs =list( df.iloc[0:100,0])
 
     count_vectorizer = CountVectorizer()
     docs_bag_of_words = count_vectorizer.fit_transform(docs)
@@ -32,4 +32,13 @@ def lda_scikit(path):
     lda = LatentDirichletAllocation(n_components =60, learning_method='batch').fit(bow)
     topic_to_docs = lda.transform(bow)
     
-    return topic_to_docs
+    clusters = []
+    no_top_documents = 10000
+    for topic_idx, topic in enumerate(lda.components_):
+        cluster = Cluster(topic)
+        top_doc_indices = np.argsort( topic_to_docs[:,topic_idx] )[::-1][0:no_top_documents]
+        for doc_index in top_doc_indices:
+            cluster.add_doc(df.iloc[doc_index,0])
+        clusters.append(cluster)
+
+    return clusters
