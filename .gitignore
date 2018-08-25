@@ -105,6 +105,4 @@ venv.bak/
 .idea
 *.xlsx
 *.png
-
-# QA
-QA-samples.xlsx
+test*.py
