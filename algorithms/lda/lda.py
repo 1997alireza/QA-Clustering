@@ -7,10 +7,3 @@ def do_lda(path, is_gensim=False):
         return lda_gensim(path)
     else:
         return lda_scikit(path)
-
-
-def get_lda(is_gensim=False):
-    if is_gensim:
-        return lda_gensim
-    else:
-        return lda_scikit
