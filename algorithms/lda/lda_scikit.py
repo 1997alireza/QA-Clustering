@@ -7,7 +7,6 @@ from cluster import Cluster
 
 
 def read_data(data_path):
-    print(data_path)
     df = pd.read_excel(data_path, sheet_name='preprocessed')
     return df
 
@@ -53,4 +52,5 @@ def lda_scikit(path):
         for doc_index in top_doc_indices:
             cluster.add_doc(df.iloc[doc_index, 0])
         clusters.append(cluster)
+
     return clusters
