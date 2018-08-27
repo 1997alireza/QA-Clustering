@@ -5,8 +5,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 import matplotlib.pyplot as plt
 from sklearn.cluster import AgglomerativeClustering
-# from scipy.cluster.hierarchy import ward, dendrogram
-from sklearn.metrics.pairwise import euclidean_distances
+from scipy.cluster.hierarchy import dendrogram
 
 
 def read_data(data_path):
@@ -38,42 +37,52 @@ def create_2D_List(docs_tfidf):
     sentence = []
 
 
-def create_hierarchical_model(n_clusters, linkage, affinity):
-    return AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage, affinity=affinity)
-    # connectivity=connectivity
-    # linkage_matrix = ward(distance)
-    # print("here0")
-    # fig, ax = plt.subplots(figsize=(30, 45))  # set size
-    # ax = dendrogram(linkage_matrix, orientation="right", labels=titles);
-    # print("here1")
-    # plt.tick_params( \
-    #     axis='x',  # changes apply to the x-axis
-    #     which='both',  # both major and minor ticks are affected
-    #     bottom='off',  # ticks along the bottom edge are off
-    #     top='off',  # ticks along the top edge are off
-    #     labelbottom='off')
-    # # show plot with tight layout
-    # plt.tight_layout()
-    #
-    # # AgglomerativeClustering(n_clusters=100, linkage=linkage_matrix, affinity='euclidean')
-    # # plt.show()
-    # # save figure as ward_clusters
-    # plt.savefig('ward_clusters.png', dpi=200)
-    # print("here2")
-    # plt.close()
-    # return type(ax)
+# function to draw hierarchical model
+def plot_dendrogram(model, **kwargs):
+    # Children of hierarchical clustering
+    children = model.children_
+    # Distances between each pair of children
+    # Since we don't have this information, we can use a uniform one for plotting
+    distance = np.arange(children.shape[0])
+
+    # The number of observations contained in each cluster level
+    no_of_observations = np.arange(2, children.shape[0] + 2)
+
+    # Create linkage matrix and then plot the dendrogram
+    linkage_matrix = np.column_stack([children, distance, no_of_observations]).astype(float)
+
+    # Plot the corresponding dendrogram
+    dendrogram(linkage_matrix, **kwargs)
 
 
-def hierachical(data_path):
+def create_cluster_members(labels, corpus, number_of_topics):
     clusters = []
-    number_of_topics = 1
-    pandas_data = read_data(data_path=data_path)
-    corpus = create_corpus(pandas_data=pandas_data)
-    docs_tfidf, _ = create_transformed_model(corpus[:300])
-    hierarchical_model = create_hierarchical_model(n_clusters=number_of_topics, linkage='ward', affinity='euclidean')
-    hierarchical_model.fit(docs_tfidf.toarray())
+    for i in range(number_of_topics):
+        cluster = Cluster("")
+        for j in range(len(labels)):
+            if labels[j] == i:
+                cluster.add_doc(corpus[j])
+        cluster.title = cluster.documents[0]
+        clusters.append(cluster)
+
     return clusters
 
 
-if __name__ == '__main__':
-    hierachical("../QA-samples.xlsx")
+def create_hierarchical_model(n_clusters, linkage, affinity):
+    return AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage, affinity=affinity)
+
+
+def hierarchical(data_path):
+    number_of_topics = 10
+    pandas_data = read_data(data_path=data_path)
+    corpus = create_corpus(pandas_data=pandas_data)
+    docs_tfidf, _ = create_transformed_model(corpus[:500])
+    hierarchical_model = create_hierarchical_model(n_clusters=number_of_topics, linkage='ward', affinity='euclidean')
+    model = hierarchical_model.fit(docs_tfidf.toarray())
+    labels = model.labels_
+    print(labels)
+    clusters = create_cluster_members(labels=labels, corpus=corpus, number_of_topics=number_of_topics)
+    plt.title('Hierarchical Clustering Dendrogram')
+    plot_dendrogram(model, labels=model.labels_)
+    plt.show()
+    return clusters
