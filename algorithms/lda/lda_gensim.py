@@ -106,7 +106,6 @@ train_bow_matrix, test_bow_matrix, dictionary, sheet = [None] * 4
 
 def lda_gensim(path):
     global train_bow_matrix, test_bow_matrix, dictionary, sheet
-    # wb = open_workbook('./QA-samples.xlsx')
     wb = open_workbook(path)
     sheet = wb.sheet_by_index(1)
     tokens_set = get_tokens(sheet)
