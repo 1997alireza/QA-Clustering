@@ -1,28 +1,14 @@
-import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.decomposition import LatentDirichletAllocation
 from cluster import Cluster
-
-
-def read_data(data_path):
-    df = pd.read_excel(data_path, sheet_name='preprocessed')
-    return df
-
-
-def make_corpus(pandas_data):
-    corpus = []
-    for each_row in range(0, pandas_data.shape[0]):
-        if (type(pandas_data.iat[each_row, 1]) is str):
-            corpus.append(pandas_data.iat[each_row, 1])
-    return corpus
+from tools import load_stop_words
 
 
 # Get the docs & make Bag of Words of them
-def create_bow(pandas_data):
-    corpus = make_corpus(pandas_data)
-    stop_words = load_stopwords()
+def create_bow(corpus):
+    stop_words = load_stop_words()
     count_vectorizer = CountVectorizer(stop_words=stop_words)
     docs_bag_of_words = count_vectorizer.fit_transform(corpus)
     docs_bag_of_words_feature_names = count_vectorizer.get_feature_names()
@@ -31,13 +17,8 @@ def create_bow(pandas_data):
     return docs_bag_of_words, docs_bag_of_words_feature_names, docs_bag_of_words_tfidf
 
 
-def load_stopwords():
-    return [(x.strip()) for x in open('../../persian-stopwords.txt', 'r').read().split('\n')]
-
-
-def lda_scikit(path):
-    df = read_data(path)
-    bow, bow_feature_names, bow_tfidf = create_bow(df)
+def lda_scikit(corpus):
+    bow, bow_feature_names, bow_tfidf = create_bow(corpus)
     lda = LatentDirichletAllocation(n_components=60, learning_method='online').fit(bow)
     topic_to_docs = lda.transform(bow)
 
@@ -50,7 +31,7 @@ def lda_scikit(path):
         cluster = Cluster(title[0])
         top_doc_indices = np.argsort(topic_to_docs[:, topic_idx])[::-1][0:no_top_documents]
         for doc_index in top_doc_indices:
-            cluster.add_doc(df.iloc[doc_index, 0])
+            cluster.add_doc(doc_index, corpus[doc_index])
         clusters.append(cluster)
 
     return clusters

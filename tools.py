@@ -5,10 +5,10 @@ def load_stop_words():
     return stopwords
 
 
-def get_clusters(algorithm, excel_path):
+def get_clusters(algorithm, corpus):
     """
     :param algorithm: a function that get a path and return the clusters
-    :param excel_path: a string
+    :param corpus: a string
     :return: a list of Cluster objects
     """
-    return algorithm(excel_path)
+    return algorithm(corpus)

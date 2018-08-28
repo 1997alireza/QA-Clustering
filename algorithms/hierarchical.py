@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from cluster import Cluster
 from sklearn.feature_extraction.text import CountVectorizer
@@ -7,34 +6,16 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import AgglomerativeClustering
 from scipy.cluster.hierarchy import dendrogram
 
-
-def read_data(data_path):
-    return pd.read_excel(data_path, sheet_name='preprocessed')
-
-
-def load_stopwords():
-    return [(x.strip()) for x in open('../persian-stopwords.txt', 'r').read().split('\n')]
-
-
-def create_corpus(pandas_data):
-    corpus = []
-    for each_row in range(0, pandas_data.shape[0]):
-        if (type(pandas_data.iat[each_row, 1]) is str):
-            corpus.append(pandas_data.iat[each_row, 1])
-    return corpus
+from tools import load_stop_words
 
 
 # tfidf model
 def create_transformed_model(corpus):
-    count_vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words=load_stopwords())
+    count_vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words=load_stop_words())
     docs_bag_of_words = count_vectorizer.fit_transform(corpus)
     docs_bag_of_words_feature_names = count_vectorizer.get_feature_names()
     docs_tfidf = TfidfTransformer().fit_transform(docs_bag_of_words)
     return docs_tfidf, docs_bag_of_words_feature_names
-
-
-def create_2D_List(docs_tfidf):
-    sentence = []
 
 
 # function to draw hierarchical model
@@ -61,7 +42,7 @@ def create_cluster_members(labels, corpus, number_of_topics):
         cluster = Cluster("")
         for j in range(len(labels)):
             if labels[j] == i:
-                cluster.add_doc(corpus[j])
+                cluster.add_doc(j, corpus[j])
         cluster.title = cluster.documents[0]
         clusters.append(cluster)
 
@@ -72,11 +53,9 @@ def create_hierarchical_model(n_clusters, linkage, affinity):
     return AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage, affinity=affinity)
 
 
-def hierarchical(data_path):
+def hierarchical(corpus):
     number_of_topics = 10
-    pandas_data = read_data(data_path=data_path)
-    corpus = create_corpus(pandas_data=pandas_data)
-    docs_tfidf, _ = create_transformed_model(corpus[:500])
+    docs_tfidf, _ = create_transformed_model(corpus)
     hierarchical_model = create_hierarchical_model(n_clusters=number_of_topics, linkage='ward', affinity='euclidean')
     model = hierarchical_model.fit(docs_tfidf.toarray())
     labels = model.labels_
