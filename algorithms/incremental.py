@@ -26,62 +26,55 @@ import numpy as np
 import random
 from org.apache.lucene.analysis.fa import PersianAnalyzer
 
-stop_words_address = 'incremental_stopwords.txt'
+
 # stop_words_address = '../persian-stopwords.txt'
 
 def load_stop_words():
+    global stop_words_address
     return [(x.strip()) for x in open(stop_words_address, 'r', encoding='utf8').read().split('\n')]
 
 
-lucene.initVM(vmargs=['-Djava.awt.headless=true'])
-
-data = pd.ExcelFile('../IrancellQA.xlsx')
-preproc = data.parse('preprocessed')
-raw = data.parse('Raw')
-preproc = preproc.applymap(str)
-raw = raw.applymap(str)
-precols = preproc.columns
-rawcols = raw.columns
-soal = 0
-javab = 1
+def load_data(path):
+    global data, preproc, raw, precols, rawcols, soal, javab, records_numb, sw, stop_words_address
+    lucene.initVM(vmargs=['-Djava.awt.headless=true'])
+    data = pd.ExcelFile(path)
+    preproc = data.parse('preprocessed')
+    raw = data.parse('Raw')
+    preproc = preproc.applymap(str)
+    raw = raw.applymap(str)
+    precols = preproc.columns
+    rawcols = raw.columns
+    soal = 0
+    javab = 1
+    records_numb = len(preproc[precols[javab]])
+    stop_words_address = 'incremental_stopwords.txt'
+    sw = load_stop_words()
 
 
 def get_all_sentences():
-    sentences = []
-    for i in range(0, 14191):
-        # for i in range(0, 1000):
-        preA = preproc[precols[javab]][i]
-        sentences.append(preA)
-    return sentences
-
-
-sw = load_stop_words()
+    global records_numb
+    sen_pre, sen_raw = [], []
+    for i in range(0, records_numb):
+        s_pre = preproc[precols[javab]][i]
+        s_raw = raw[rawcols[javab]][i]
+        sen_pre.append(s_pre)
+        sen_raw.append(s_raw)
+    return sen_pre, sen_raw
 
 
 class DocRepo:
-    def __init__(self, indexes=None):
-
+    def __init__(self):
+        global stop_words_address
         # self.analyzer = StandardAnalyzer()
-
         # self.analyzer = PersianAnalyzer(StopFilter.makeStopSet(sw))
         # self.analyzer = PersianAnalyzer()
         self.analyzer = StopAnalyzer(Paths.get(stop_words_address))
         self.config = IndexWriterConfig(self.analyzer)
         self.index = RAMDirectory()
-        if indexes is not None:
-            self.loadIndex(indexes)
-            print("is not none")
-        else:
-            self.loadIndex()
+        self.loadIndex()
 
-    def loadIndex(self, indexes=None):
+    def loadIndex(self):
         self.w = IndexWriter(self.index, self.config)
-        if indexes is None:
-            for i in range(0, 14191):
-                self.addDocument(i)
-        else:
-            for i in indexes:
-                self.addDocument(i)
 
     def addDocument(self, id):
         preQ = preproc[precols[soal]][id]
@@ -116,8 +109,8 @@ class DocRepo:
             return
         reader = DirectoryReader.open(self.w)
         self.searcher = IndexSearcher(reader)
-        simi = BM25Similarity(12.0, 1.0)
-        self.searcher.setSimilarity(simi)
+        # simi = BM25Similarity(12.0, 1.0)
+        # self.searcher.setSimilarity(simi)
 
         docs = self.searcher.search(q, hitsPerPage)
         hits = docs.scoreDocs
@@ -133,23 +126,22 @@ class DocRepo:
             return None, -1
 
 
-sentences = get_all_sentences()
-
-
-def do_cluster(path, threshold):
+def do_cluster(threshold):
+    global sen_pre, sen_raw
+    sen_pre, sen_raw = get_all_sentences()
     clusters = []
     # repo = DocRepo(path)
 
-    random.shuffle(sentences)
+    random.shuffle(sen_pre)
     flags = []
-    for i in range(0, len(sentences)):
+    for i in range(0, len(sen_pre)):
         flags.append(-1)
-    repo = DocRepo([])
+    repo = DocRepo()
     # reader = DirectoryReader.open(repo.w)
     # searcher = IndexSearcher(reader)
 
-    print('number of sentences ', len(sentences))
-    for senidx, sentence in enumerate(sentences):
+    print('number of sentences ', len(sen_pre))
+    for senidx, sentence in enumerate(sen_pre):
         best_matching_cluster = -1
         # best_macthing_score = -1
         closest, mate = repo.get_most_similar(sentence)
@@ -168,24 +160,42 @@ def do_cluster(path, threshold):
     return clusters, repo
 
 
-# repo = DocRepo()
+from cluster import Cluster
 
-#
-# print(df2[cols2[1]][0])
-# print((searcher.doc(0)).get('pa'))
 
-res, repo = do_cluster('IrancellQA.xlsx', threshold=10)
-print([len(cluster) for cluster in res])
-print(len(res))
-ones = [cl for cl in res if len(cl) == 1]
-print('ones : ', len(ones))
-with open('ones.txt', 'w', encoding='utf-8') as f:
-    for one in ones:
-        f.write(str(sentences[one[0]]))
-        f.write("\n")
-        # f.write("----------------------------------------")
+def incremental(path, threshold=5):
+    load_data(path)
+    global sen_pre, sen_raw
 
-# analyze = o()
-# print(analyze.getDefaultStopSet())
-# sw  = load_stop_words()
-# print(sw)
+    res, repo = do_cluster(threshold)
+    cluss = []
+    for cl in res:
+        cll = Cluster("not implemented yet")
+        for numb in cl:
+            cll.add_doc(sen_raw[numb])
+        cluss.append(cll)
+    return cluss
+
+
+def test():
+    import os
+    load_data('../IrancellQA.xlsx')
+    global sen_pre, sen_raw
+    res, repo = do_cluster(5)
+    i = 0
+    os.makedirs("clusters")
+    print(len(res))
+    ones = [cl for cl in res if len(cl) == 1]
+    for cl in res:
+        with open("clusters/" + str(i) + ".txt", 'w', encoding='utf-8') as f:
+            i += 1
+            for number in cl :
+                if number not in ones:
+                    f.write(sen_raw[number])
+                    f.write("\n--------------------------------\n")
+
+    with open('ones.txt', 'w', encoding='utf-8') as f:
+        for one in ones:
+            f.write(str(sen_pre[one[0]]))
+            f.write("\n--------------------------\n")
+
