@@ -1,13 +1,17 @@
 import random
 
-from sklearn.metrics.pairwise import euclidean_distances
+import numpy as np
+# from sklearn.metrics.pairwise import euclidean_distances
 import matplotlib.pyplot as plt
 from nltk.metrics import edit_distance
 
+from similarity_algorithms import euclidean_distance
 
-def preform_test(clusters, train_records, test_records):
+
+# preform test and plot record
+def preform_test(clusters, test_records, clustering_algorithm_name, distance_algorithm_name):
     distances = []
-    distance_algorithm = edit_distance
+    distance_algorithm = euclidean_distance
     for i in range(len(test_records)):
         min_questions_dist = 10000000
         min_cluster_index = 1000000
@@ -22,9 +26,9 @@ def preform_test(clusters, train_records, test_records):
             random.randint(0, len(clusters[min_cluster_index].records) - 1)].a_pre
         distances.append(distance_algorithm(recommended_answer, test_records[i].a_pre))
 
-    print(distances)
-    plt.hist(distances, bins=range(0, 600))
-    plt.title("Histogram")
+    print(np.mean(distances), np.var(distances), distances)
+    plt.hist(distances, bins=range(0, 50))
+    plt.title("Histogram of " + clustering_algorithm_name + " algorithm with " + distance_algorithm_name )
     plt.xlabel("Value")
     plt.ylabel("Frequency")
     plt.show()
