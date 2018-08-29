@@ -34,7 +34,7 @@ class Config:
     # stop_words_address = '../persian-stopwords.txt'
     k1 = 1.2
     b = 0.75
-    threshold = 0.5
+    threshold = 5.0
     train_size = 10000
     test_size = 4000
 
@@ -126,8 +126,7 @@ def do_cluster(threshold, do_log=False):
         closest, mate = repo.get_most_similar(sentence, do_log)
         if closest is not None:
             scores.append(closest.score)
-        if (closest is not None):
-            if closest.score >= threshold:
+        if (closest is not None) and (closest.score >= threshold):
                 best_matching_cluster = flags[mate]
         if best_matching_cluster == -1:
             clusters.append([])
@@ -201,7 +200,7 @@ def perform_test():
 
     df_pre, df_raw = read_data(data_path="../IrancellQA.xlsx")
     cor = make_records(df_pre, df_raw)
-    train_records, test_records = divide_train_test(cor, 0.9)
+    train_records, test_records = divide_train_test(cor, 1.0)
     test(train_records, True)
 
 

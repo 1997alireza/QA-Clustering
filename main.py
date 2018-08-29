@@ -18,10 +18,10 @@ def make_records(df_pre, df_raw):
     records = []
     for each_row in range(0, df_pre.shape[0]):
         records.append(Record(
-            str(df_pre.iat[each_row, 0]),
-            str(df_pre.iat[each_row, 1]),
             str(df_raw.iat[each_row, 0]),
-            str(df_raw.iat[each_row, 1])))
+            str(df_raw.iat[each_row, 1]),
+            str(df_pre.iat[each_row, 0]),
+            str(df_pre.iat[each_row, 1])))
 
     return records
 
