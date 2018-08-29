@@ -17,15 +17,13 @@ from org.apache.lucene.analysis import StopwordAnalyzerBase
 from org.apache.lucene.analysis import StopFilter
 from org.apache.lucene.search.similarities import BM25Similarity
 from org.apache.lucene.search.similarities import ClassicSimilarity
-
-import pandas as pd
 from java.nio.file import Paths
 from org.apache.lucene.store import SimpleFSDirectory
 from org.apache.lucene.search import IndexSearcher, BooleanClause, BooleanQuery, TermQuery
 from org.apache.lucene.index import DirectoryReader, Term
-import numpy as np
 import random
 from org.apache.lucene.analysis.fa import PersianAnalyzer
+import pandas as pd
 from random import randint
 import matplotlib.pyplot as plt
 
@@ -49,10 +47,11 @@ def editDistance(str1, str2):
 
 
 class Config:
-    stop_words_address = 'incremental_stopwords.txt'
+    # stop_words_address = 'incremental_stopwords.txt'
+    stop_words_address = '../persian-stopwords.txt'
     k1 = 1.2
     b = 0.75
-    threshold = 10
+    threshold = 5
     train_size = 10000
     test_size = 4000
 
@@ -105,6 +104,7 @@ def evaluate():
     for i, q in enumerate(questions_test):
         near = repo.get_nearest_question(q)
         if near is not None:
+            # print("heyy")
             clus = flags[int(near)]
             answer_id = clusters[clus][randint(0, len(clusters[clus]) - 1)]
             numbers.append(editDistance(answers_train[answer_id], answers_test[i]))
@@ -124,11 +124,6 @@ class DocRepo:
         self.config = IndexWriterConfig(self.analyzer)
         self.index = RAMDirectory()
         self.w = IndexWriter(self.index, self.config)
-        reader = DirectoryReader.open(self.w)
-        self.searcher = IndexSearcher(reader)
-        simi = BM25Similarity(Config.k1, Config.b)
-        # simi = ClassicSimilarity()
-        self.searcher.setSimilarity(simi)
 
     def addDocument(self, id):
         preQ = preproc[precols[soal]][id]
@@ -155,6 +150,12 @@ class DocRepo:
                 query_builder.add(BooleanClause(qtq, BooleanClause.Occur.SHOULD))
         q = query_builder.build()
         hitsPerPage = 2
+        reader = DirectoryReader.open(self.w)
+        self.searcher = IndexSearcher(reader)
+        simi = BM25Similarity(Config.k1, Config.b)
+        # simi = ClassicSimilarity()
+        self.searcher.setSimilarity(simi)
+
         docs = self.searcher.search(q, hitsPerPage)
         hits = docs.scoreDocs
         if len(hits) > 0:
@@ -170,6 +171,11 @@ class DocRepo:
                 query_builder.add(BooleanClause(qtq, BooleanClause.Occur.SHOULD))
         q = query_builder.build()
         hitsPerPage = 2
+        reader = DirectoryReader.open(self.w)
+        self.searcher = IndexSearcher(reader)
+        simi = BM25Similarity(Config.k1, Config.b)
+        # simi = ClassicSimilarity()
+        self.searcher.setSimilarity(simi)
 
         docs = self.searcher.search(q, hitsPerPage)
         hits = docs.scoreDocs
@@ -185,7 +191,7 @@ class DocRepo:
 
 
 def do_cluster(threshold, do_log=False):
-    global answers_test, questions_test, answers_train, questions_train
+    global answers_train, questions_train
     clusters = []
     # repo = DocRepo(path)
 
@@ -200,7 +206,7 @@ def do_cluster(threshold, do_log=False):
         print('number of sentences ', len(answers_train))
     for senidx, sentence in enumerate(answers_train):
         best_matching_cluster = -1
-        closest, mate = repo.get_most_similar(sentence)
+        closest, mate = repo.get_most_similar(sentence, do_log)
         if closest is not None:
             scores.append(closest.score)
         if (closest is not None) and (closest.score >= threshold):
@@ -239,35 +245,36 @@ def incremental(path):
     for cl in res:
         cll = Cluster("not implemented yet")
         for numb in cl:
-            cll.add_doc(answers[numb])
+            cll.add_doc((numb, answers[numb]))
         cluss.append(cll)
     return cluss
 
 
-def test():
+def test(do_log):
     import os
     load_data('../IrancellQA.xlsx')
-    global answers
-    res, repo = do_cluster(Config.threshold)
+    global answers_train
+    res, repo = do_cluster(Config.threshold, do_log)
     i = 0
     os.makedirs("clusters")
     print(len(res))
+    print(len([re for re in res if len(re) == 1]))
     ones = [cl for cl in res if len(cl) == 1]
     for cl in res:
         i += 1
         with open("clusters/" + str(i) + ".txt", 'w', encoding='utf-8') as f:
             for number in cl:
                 if number not in ones:
-                    f.write(answers[number])
+                    f.write(answers_train[number])
                     f.write("\n--------------------------------\n")
 
     with open('ones.txt', 'w', encoding='utf-8') as f:
         for one in ones:
-            f.write(str(answers[one[0]]))
+            f.write(str(answers_train[one[0]]))
             f.write("\n--------------------------\n")
     print([len(re) for re in res])
 
 
 #
-# test()
-evaluate()
+test(True)
+# evaluate()
