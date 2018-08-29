@@ -12,3 +12,10 @@ def get_clusters(algorithm, corpus):
     :return: a list of Cluster objects
     """
     return algorithm(corpus)
+
+
+def make_corpus(records):
+    corpus = []
+    for i in range(len(records)):
+        corpus.append(records[i].a_pre)
+    return corpus
