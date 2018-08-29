@@ -6,12 +6,13 @@ from algorithms.lda.lda import get_lda
 from record import Record
 from tools import get_clusters
 from clustering_test import preform_test
+from similarity_algorithms import euclidean_distance
 
 
 def read_data(data_path):
     df_pre = pd.read_excel(data_path, sheet_name='preprocessed')
     df_raw = pd.read_excel(data_path, sheet_name='Raw')
-    return df_pre[:1000], df_raw[:1000]
+    return df_pre[:500], df_raw[:500]
 
 
 def make_records(df_pre, df_raw):
@@ -40,7 +41,7 @@ if __name__ == '__main__':
     records = make_records(df_pre=df_pre, df_raw=df_raw)
     train_records, test_records = divide_train_test(records=records, train_percent=train_percent)
     clusters = get_clusters(hierarchical, train_records)
-    preform_test(clusters=clusters, test_records=test_records, clustering_algorithm_name="hierarchical",
+    preform_test(clusters, test_records, euclidean_distance, clustering_algorithm_name="hierarchical",
                  distance_algorithm_name="euclidean")
     top_n_docs = 8
     # for x in clusters:
