@@ -4,14 +4,14 @@ class Cluster:
         self.title = title
         self.documents = []
 
-    def add_doc(self, document):
-        self.documents.append(document)
+    def add_doc(self, index, sentence):
+        self.documents.append((index, sentence))
 
     def __str__(self):
         res = "    " + self.title + ":\n"
-        res += "    " + '-'*(len(self.title)+1) + '\n'
+        res += "    " + '-' * (len(self.title) + 1) + '\n'
         for doc in self.documents:
-            res += doc + '\n'
+            res += doc[1] + '\n'
         res += '\n'
         return res
 
@@ -21,5 +21,5 @@ class Cluster:
         print("    " + self.title + ":\n")
         print("    " + '-' * (len(self.title) + 1) + '\n')
         for i in range(top_n):
-            print(self.documents[i] + '\n')
+            print(self.documents[i][1] + '\n')
         print('\n')

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-from xlrd import open_workbook
+# from xlrd import open_workbook
 import gensim
 from nltk.tokenize import RegexpTokenizer
 from tools import load_stop_words
 from cluster import Cluster
 
 
-def get_tokens(sheet):
+def get_tokens(corpus):
     tokens_set = []
     tokenizer = RegexpTokenizer(r'\w+')
     stopwords = load_stop_words()
-    for row in range(0, sheet.nrows):
-        a = str(sheet.cell(row, 1).value).replace('ي', 'ی')
-        tokens = tokenizer.tokenize(a)
+    for row in range(len(corpus)):
+        # a = str(sheet.cell(row, 1).value).replace('ي', 'ی')
+        tokens = tokenizer.tokenize(corpus[row])
         stopped_tokens = [word for word in tokens if word not in stopwords]
         tokens_set.append(stopped_tokens)
     return tokens_set
@@ -22,29 +22,29 @@ def get_bow_matrix(token_set, dictionary):
     return [dictionary.doc2bow(tokens) for tokens in token_set]
 
 
-def get_printable_answers_best_topic(model, train_bow_matrix, sheet):
-    res = ""
-    for row in range(0, len(train_bow_matrix)):
-        res += "Answer: " + str(sheet.cell(row, 1).value) + "\n\n"
-        topic_possibilities = model[train_bow_matrix[row]]
-        res += str(topic_possibilities) + "\n"
-        best_psb = -1
-        best_topic = -1
-        for pair in topic_possibilities:
-            if pair[1] > best_psb:
-                best_topic = pair[0]
-                best_psb = pair[1]
-        res += "Best topic: " + str(best_topic) + "\n\n------------------------\n"
-    return res
+# def get_printable_answers_best_topic(model, train_bow_matrix, corpus):
+#     res = ""
+#     for row in range(0, len(train_bow_matrix)):
+#         res += "Answer: " + str(corpus[row]) + "\n\n"
+#         topic_possibilities = model[train_bow_matrix[row]]
+#         res += str(topic_possibilities) + "\n"
+#         best_psb = -1
+#         best_topic = -1
+#         for pair in topic_possibilities:
+#             if pair[1] > best_psb:
+#                 best_topic = pair[0]
+#                 best_psb = pair[1]
+#         res += "Best topic: " + str(best_topic) + "\n\n------------------------\n"
+#     return res
 
 
-def get_clusters(model, train_bow_matrix, sheet):
+def get_clusters(model, train_bow_matrix, corpus):
     clusters = []
     for t in range(0, model.num_topics):
         clusters.append(Cluster(model.show_topic(t)[0][0]))
 
     for row in range(0, len(train_bow_matrix)):
-        text = str(sheet.cell(row, 1).value)
+        text = str(corpus[row])
         topic_possibilities = model[train_bow_matrix[row]]
         best_psb = -1
         best_topic = -1
@@ -52,17 +52,17 @@ def get_clusters(model, train_bow_matrix, sheet):
             if pair[1] > best_psb:
                 best_topic = pair[0]
                 best_psb = pair[1]
-        clusters[best_topic].add_doc(text)
+        clusters[best_topic].add_doc(row, text)
     return clusters
 
 
-def make_lda_model(train_bow_matrix, test_bow_matrix, num_topics, id2word, sheet, tfidf_model=False,
+def make_lda_model(train_bow_matrix, test_bow_matrix, num_topics, id2word, corpus, tfidf_model=False,
                    get_perplexity=False):
     train_matrix = get_tfidf_matrix(train_bow_matrix, id2word) if tfidf_model else train_bow_matrix
     test_matrix = get_tfidf_matrix(test_bow_matrix, id2word) if tfidf_model else test_bow_matrix
 
     lda_model = gensim.models.LdaModel(corpus=train_matrix, num_topics=num_topics, id2word=id2word, passes=20)
-    clusters = get_clusters(lda_model, train_matrix, sheet)
+    clusters = get_clusters(lda_model, train_matrix, corpus)
     if get_perplexity:
         return clusters, lda_model.log_perplexity(test_matrix)
     else:
@@ -101,17 +101,14 @@ def get_tfidf_matrix(bow_matrix, id2word):
 #     return log_perplexities
 
 
-train_bow_matrix, test_bow_matrix, dictionary, sheet = [None] * 4
+train_bow_matrix, test_bow_matrix, dictionary = [None] * 3
 
 
-def lda_gensim(path):
-    global train_bow_matrix, test_bow_matrix, dictionary, sheet
-    # wb = open_workbook('./QA-samples.xlsx')
-    wb = open_workbook(path)
-    sheet = wb.sheet_by_index(1)
-    tokens_set = get_tokens(sheet)
+def lda_gensim(corpus):
+    global train_bow_matrix, test_bow_matrix, dictionary
+    tokens_set = get_tokens(corpus)
     set_length = len(tokens_set)
-    train_percent = 0.7
+    train_percent = 1.0
     train_tokens_set = tokens_set[:int(set_length * train_percent)]
     test_tokens_set = tokens_set[int(set_length * train_percent):]
 
@@ -122,7 +119,7 @@ def lda_gensim(path):
     # log_perplexities = calculate_perplexities(range(1, 5000), show_graph=True, tfidf_model=True)
     # print(log_perplexities)
 
-    return make_lda_model(train_bow_matrix, test_bow_matrix, 10, dictionary, sheet, tfidf_model=False)
+    return make_lda_model(train_bow_matrix, test_bow_matrix, 10, dictionary, corpus, tfidf_model=False)
 
 
 if __name__ == '__main__':
