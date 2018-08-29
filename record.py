@@ -6,5 +6,8 @@ class Record:
         self.q_pre = question_pre
         self.a_pre = answer_pre
 
-    def print(self):
-        print("")
+    def __str__(self):
+        return "(Q raw: " + self.q_raw, ")" + \
+               "(A raw: ", self.a_raw, ")" + \
+               "(Q pre: ", self.q_pre, ")" + \
+               "(A pre: ", self.a_pre, ")"
