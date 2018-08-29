@@ -34,14 +34,14 @@ def divide_train_test(records, train_percent):
 
 
 if __name__ == '__main__':
-    data_path = "QA-samples.xlsx"
+    data_path = "QA-samples-reduced.xlsx"
     train_percent = 0.9
     df_pre, df_raw = read_data(data_path=data_path)
     records = make_records(df_pre=df_pre, df_raw=df_raw)
     train_records, test_records = divide_train_test(records=records, train_percent=train_percent)
-    clusters = get_clusters(get_lda(False), train_records)
-    preform_test(clusters=clusters, train_records=train_records, test_records=test_records)
+    clusters = get_clusters(get_lda(True), train_records)
+    # preform_test(clusters=clusters, train_records=train_records, test_records=test_records)
     top_n_docs = 8
-    # for x in clusters:
-    #     x.print(top_n_docs)
-    #     print("-------------\n")
+    for x in clusters:
+        x.print(top_n_docs, True)
+        print("-------------\n")
