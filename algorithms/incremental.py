@@ -32,9 +32,9 @@ import numpy as np
 class Config:
     stop_words_address = 'incremental_stopwords.txt'
     # stop_words_address = '../persian-stopwords.txt'
-    k1 = 3.0
+    k1 = 1.2
     b = 0.75
-    threshold = 9.0
+    threshold = 5.0
     train_size = 10000
     test_size = 4000
 
@@ -48,28 +48,6 @@ def load_stop_words():
 
 sw = load_stop_words()
 
-
-# def evaluate():
-#     print("Loading Data...")
-#     load_data('../IrancellQA.xlsx')
-#     print("Data Was Loaded")
-#     print("Clustering... ")
-#     clusters, repo = do_cluster(Config.threshold)
-#     print("Clustering Done")
-#     global answers_test, questions_test, answers_train, questions_train, flags
-#     numbers = []
-#     for i, q in enumerate(questions_test):
-#         near = repo.get_nearest_question(q)
-#         if near is not None:
-#             # print("heyy")
-#             clus = flags[int(near)]
-#             answer_id = clusters[clus][randint(0, len(clusters[clus]) - 1)]
-#             numbers.append(editDistance(answers_train[answer_id], answers_test[i]))
-#     plt.hist(numbers, bins=range(0, 600))
-#     plt.title("Histogram")
-#     plt.xlabel("Value")
-#     plt.ylabel("Frequency")
-#     plt.show()
 
 
 class DocRepo:
@@ -94,8 +72,7 @@ class DocRepo:
     def __del__(self):
         self.w.close()
 
-
-
+        
     def get_most_similar(self, sentence, do_log=False):
         # print('query string is',string)
         # q = QueryParser('pa', self.analyzer).parse(sentence)
@@ -138,11 +115,12 @@ def do_cluster(threshold, do_log=False):
         print('number of sentences ', len(answers_train))
     for senidx, sentence in enumerate(answers_train):
         best_matching_cluster = -1
+
         closest, mate = repo.get_most_similar(sentence, do_log)
         if closest is not None:
             scores.append(closest.score)
         if (closest is not None) and (closest.score >= threshold):
-            best_matching_cluster = flags[mate]
+                best_matching_cluster = flags[mate]
         if best_matching_cluster == -1:
             clusters.append([])
             clusters[-1].append(senidx)
@@ -176,7 +154,7 @@ def incremental(train_records):
     res, repo = do_cluster(Config.threshold)
     cluss = []
     for cl in res:
-        cll = Cluster("not implemented yet")
+        cll = Cluster(train_records[cl[0]])
         for numb in cl:
             cll.records.append(train_records[numb])
             # cll.add_doc((numb, answers_train[numb]))
@@ -212,8 +190,16 @@ def test(train_records, do_log):
 def perform_test():
     from main import read_data, make_records, divide_train_test
 
+
+def perform_test():
+    from main import read_data, make_records, divide_train_test
+
     df_pre, df_raw = read_data(data_path="../IrancellQA.xlsx")
     cor = make_records(df_pre, df_raw)
-    train_records, test_records = divide_train_test(cor, 0.9)
+    train_records, test_records = divide_train_test(cor, 1.0)
     test(train_records, True)
-# perform_test()
+
+
+perform_test()
+# evaluate()
+
