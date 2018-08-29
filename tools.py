@@ -15,7 +15,4 @@ def get_clusters(algorithm, corpus):
 
 
 def make_corpus(records):
-    corpus = []
-    for i in range(len(records)):
-        corpus.append(records[i].a_pre)
-    return corpus
+    return [r.a_pre for r in records]

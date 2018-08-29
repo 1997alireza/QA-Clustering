@@ -49,14 +49,6 @@ def load_stop_words():
 sw = load_stop_words()
 
 
-# def evaluate():
-#     numbers = [random.randint(0,600) for r in range(0,600)]
-#     plt.hist(numbers)
-#     plt.title("Histogram")
-#     plt.xlabel("Value")
-#     plt.ylabel("Frequency")
-#     plt.show()
-
 
 class DocRepo:
     def __init__(self):
@@ -80,6 +72,7 @@ class DocRepo:
     def __del__(self):
         self.w.close()
 
+        
     def get_most_similar(self, sentence, do_log=False):
         # print('query string is',string)
         # q = QueryParser('pa', self.analyzer).parse(sentence)
@@ -194,6 +187,9 @@ def test(train_records, do_log):
             f.write("\n--------------------------\n")
     print([len(re) for re in res])
 
+def perform_test():
+    from main import read_data, make_records, divide_train_test
+
 
 def perform_test():
     from main import read_data, make_records, divide_train_test
@@ -206,3 +202,4 @@ def perform_test():
 
 perform_test()
 # evaluate()
+

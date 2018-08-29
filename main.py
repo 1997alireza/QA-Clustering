@@ -6,6 +6,7 @@ from algorithms.lda.lda import get_lda
 from record import Record
 from tools import get_clusters
 from clustering_test import preform_test
+from similarity_algorithms import euclidean_distance
 
 
 def read_data(data_path):
@@ -34,14 +35,15 @@ def divide_train_test(records, train_percent):
 
 
 if __name__ == '__main__':
-    data_path = "QA-samples-reduced.xlsx"
+    data_path = "QA-samples.xlsx"
     train_percent = 0.9
     df_pre, df_raw = read_data(data_path=data_path)
     records = make_records(df_pre=df_pre, df_raw=df_raw)
     train_records, test_records = divide_train_test(records=records, train_percent=train_percent)
-    clusters = get_clusters(get_lda(True), train_records)
-    # preform_test(clusters=clusters, train_records=train_records, test_records=test_records)
+    clusters = get_clusters(hierarchical, train_records)
+    preform_test(clusters, test_records, euclidean_distance, clustering_algorithm_name="hierarchical",
+                 distance_algorithm_name="euclidean")
     top_n_docs = 8
-    for x in clusters:
-        x.print(top_n_docs, True)
-        print("-------------\n")
+    # for x in clusters:
+    #     x.print(top_n_docs, True)
+    #     print("-------------\n")
