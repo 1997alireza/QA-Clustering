@@ -26,93 +26,81 @@ from org.apache.lucene.analysis.fa import PersianAnalyzer
 import pandas as pd
 from random import randint
 import matplotlib.pyplot as plt
-
-
-# stop_words_address = '../persian-stopwords.txt'
-def editDistance(str1, str2):
-    m = len(str1)
-    n = len(str2)
-    dp = [[0 for x in range(n + 1)] for x in range(m + 1)]
-    for i in range(m + 1):
-        for j in range(n + 1):
-            if i == 0:
-                dp[i][j] = j
-            elif j == 0:
-                dp[i][j] = i
-            elif str1[i - 1] == str2[j - 1]:
-                dp[i][j] = dp[i - 1][j - 1]
-            else:
-                dp[i][j] = 1 + min(dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1])
-    return dp[m][n]
+import numpy as np
 
 
 class Config:
-    # stop_words_address = 'incremental_stopwords.txt'
-    stop_words_address = '../persian-stopwords.txt'
-    k1 = 1.2
+    stop_words_address = 'incremental_stopwords.txt'
+    # stop_words_address = '../persian-stopwords.txt'
+    k1 = 3.0
     b = 0.75
-    threshold = 5
+    threshold = 9.0
     train_size = 10000
     test_size = 4000
+
+
+lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
 
 def load_stop_words():
     return [(x.strip()) for x in open(Config.stop_words_address, 'r', encoding='utf8').read().split('\n')]
 
 
-def load_data(path):
-    global data, preproc, raw, precols, rawcols, soal, javab
-    global records_numb, sw
-    global answers_test, questions_test, answers_train, questions_train
-
-    lucene.initVM(vmargs=['-Djava.awt.headless=true'])
-    data = pd.ExcelFile(path)
-    preproc = data.parse('preprocessed')
-    raw = data.parse('Raw')
-    preproc = preproc.applymap(str)
-    raw = raw.applymap(str)
-    precols = preproc.columns
-    rawcols = raw.columns
-    soal = 0
-    javab = 1
-    records_numb = len(preproc[precols[javab]])
-    sw = load_stop_words()
-    answers_train, questions_train = [], []
-    answers_test, questions_test = [], []
-    for i in range(0, Config.train_size):
-        a_pre = preproc[precols[javab]][i]
-        q_pre = preproc[precols[soal]][i]
-        answers_train.append(a_pre)
-        questions_train.append(q_pre)
-    for i in range(1, Config.test_size):
-        i += Config.train_size
-        a_pre = preproc[precols[javab]][i]
-        q_pre = preproc[precols[soal]][i]
-        answers_test.append(a_pre)
-        questions_test.append(q_pre)
+sw = load_stop_words()
 
 
-def evaluate():
-    print("Loading Data...")
-    load_data('../IrancellQA.xlsx')
-    print("Data Was Loaded")
-    print("Clustering... ")
-    clusters, repo = do_cluster(Config.threshold)
-    print("Clustering Done")
-    global answers_test, questions_test, answers_train, questions_train, flags
-    numbers = []
-    for i, q in enumerate(questions_test):
-        near = repo.get_nearest_question(q)
-        if near is not None:
-            # print("heyy")
-            clus = flags[int(near)]
-            answer_id = clusters[clus][randint(0, len(clusters[clus]) - 1)]
-            numbers.append(editDistance(answers_train[answer_id], answers_test[i]))
-    plt.hist(numbers, bins=range(0, 600))
-    plt.title("Histogram")
-    plt.xlabel("Value")
-    plt.ylabel("Frequency")
-    plt.show()
+# def load_data(path):
+#     global data, preproc, raw, precols, rawcols, soal, javab
+#     global records_numb, sw
+#     global answers_test, questions_test, answers_train, questions_train
+#
+# data = pd.ExcelFile(path)
+#     preproc = data.parse('preprocessed')
+#     raw = data.parse('Raw')
+#     preproc = preproc.applymap(str)
+#     raw = raw.applymap(str)
+#     precols = preproc.columns
+#     rawcols = raw.columns
+#     soal = 0
+#     javab = 1
+#     records_numb = len(preproc[precols[javab]])
+#     sw = load_stop_words()
+#     answers_train, questions_train = [], []
+#     answers_test, questions_test = [], []
+#     for i in range(0, Config.train_size):
+#         a_pre = preproc[precols[javab]][i]
+#         q_pre = preproc[precols[soal]][i]
+#         answers_train.append(a_pre)
+#         questions_train.append(q_pre)
+#     for i in range(1, Config.test_size):
+#         i += Config.train_size
+#         a_pre = preproc[precols[javab]][i]
+#         q_pre = preproc[precols[soal]][i]
+#         answers_test.append(a_pre)
+#         questions_test.append(q_pre)
+
+
+# def evaluate():
+#     print("Loading Data...")
+#     load_data('../IrancellQA.xlsx')
+#     print("Data Was Loaded")
+#     print("Clustering... ")
+#     clusters, repo = do_cluster(Config.threshold)
+#     print("Clustering Done")
+#     global answers_test, questions_test, answers_train, questions_train, flags
+#     numbers = []
+#     for i, q in enumerate(questions_test):
+#         near = repo.get_nearest_question(q)
+#         if near is not None:
+#             # print("heyy")
+#             clus = flags[int(near)]
+#             answer_id = clusters[clus][randint(0, len(clusters[clus]) - 1)]
+#             numbers.append(editDistance(answers_train[answer_id], answers_test[i]))
+#     plt.hist(numbers, bins=range(0, 600))
+#     plt.title("Histogram")
+#     plt.xlabel("Value")
+#     plt.ylabel("Frequency")
+#     plt.show()
 
 
 class DocRepo:
@@ -126,15 +114,17 @@ class DocRepo:
         self.w = IndexWriter(self.index, self.config)
 
     def addDocument(self, id):
-        preQ = preproc[precols[soal]][id]
-        rawQ = raw[rawcols[soal]][id]
-        rawA = raw[rawcols[javab]][id]
-        preA = preproc[precols[javab]][id]
+        global answers_train
+        # preQ = preproc[precols[soal]][id]
+        # rawQ = raw[rawcols[soal]][id]
+        # rawA = raw[rawcols[javab]][id]
+        # preA = preproc[precols[javab]][id]
+        preA = answers_train[id]
         doc = Document()
-        doc.add(TextField("rq", rawQ, Field.Store.YES))
-        doc.add(TextField("pq", preQ, Field.Store.YES))
+        # doc.add(TextField("rq", rawQ, Field.Store.YES))
+        # doc.add(TextField("pq", preQ, Field.Store.YES))
         doc.add(TextField("pa", preA, Field.Store.YES))
-        doc.add(TextField("ra", rawA, Field.Store.YES))
+        # doc.add(TextField("ra", rawA, Field.Store.YES))
         doc.add(StringField("id", str(id), Field.Store.YES))
         self.w.addDocument(doc)
         self.w.commit()
@@ -142,24 +132,24 @@ class DocRepo:
     def __del__(self):
         self.w.close()
 
-    def get_nearest_question(self, question):
-        query_builder = BooleanQuery.Builder()
-        for token in question.split(' '):
-            if token not in sw:
-                qtq = TermQuery(Term("pq", token))
-                query_builder.add(BooleanClause(qtq, BooleanClause.Occur.SHOULD))
-        q = query_builder.build()
-        hitsPerPage = 2
-        reader = DirectoryReader.open(self.w)
-        self.searcher = IndexSearcher(reader)
-        simi = BM25Similarity(Config.k1, Config.b)
-        # simi = ClassicSimilarity()
-        self.searcher.setSimilarity(simi)
-
-        docs = self.searcher.search(q, hitsPerPage)
-        hits = docs.scoreDocs
-        if len(hits) > 0:
-            return (self.searcher.doc(hits[0].doc)).get('id')
+    # def get_nearest_question(self, question):
+    #     query_builder = BooleanQuery.Builder()
+    #     for token in question.split(' '):
+    #         if token not in sw:
+    #             qtq = TermQuery(Term("pq", token))
+    #             query_builder.add(BooleanClause(qtq, BooleanClause.Occur.SHOULD))
+    #     q = query_builder.build()
+    #     hitsPerPage = 2
+    #     reader = DirectoryReader.open(self.w)
+    #     self.searcher = IndexSearcher(reader)
+    #     simi = BM25Similarity(Config.k1, Config.b)
+    #     # simi = ClassicSimilarity()
+    #     self.searcher.setSimilarity(simi)
+    #
+    #     docs = self.searcher.search(q, hitsPerPage)
+    #     hits = docs.scoreDocs
+    #     if len(hits) > 0:
+    #         return (self.searcher.doc(hits[0].doc)).get('id')
 
     def get_most_similar(self, sentence, do_log=False):
         # print('query string is',string)
@@ -191,11 +181,10 @@ class DocRepo:
 
 
 def do_cluster(threshold, do_log=False):
-    global answers_train, questions_train
+    global answers_train
     clusters = []
     # repo = DocRepo(path)
-
-    random.shuffle(answers_train)
+    # random.shuffle(answers_train)
     global flags
     flags = []
     for i in range(0, len(answers_train)):
@@ -227,8 +216,8 @@ def do_cluster(threshold, do_log=False):
     # x = range(0, len(scores))
     # plt.scatter(x, scores)
     # plt.show()
-    # print(np.mean(scores))
-    # print(np.var(scores))
+    print(np.mean(scores))
+    print(np.var(scores))
 
     return clusters, repo
 
@@ -236,24 +225,27 @@ def do_cluster(threshold, do_log=False):
 from cluster import Cluster
 
 
-def incremental(path):
-    load_data(path)
-    global answers, answer_raw
+def incremental(train_records):
+    # load_data(path)
+    global answers_train
+    answers_train = [rec.a_pre for rec in train_records]
 
     res, repo = do_cluster(Config.threshold)
     cluss = []
     for cl in res:
         cll = Cluster("not implemented yet")
         for numb in cl:
-            cll.add_doc((numb, answers[numb]))
+            cll.records.append(train_records[numb])
+            # cll.add_doc((numb, answers_train[numb]))
         cluss.append(cll)
     return cluss
 
 
-def test(do_log):
+def test(train_records, do_log):
     import os
-    load_data('../IrancellQA.xlsx')
+    # load_data('../IrancellQA.xlsx')
     global answers_train
+    answers_train = [rec.a_pre for rec in train_records]
     res, repo = do_cluster(Config.threshold, do_log)
     i = 0
     os.makedirs("clusters")
@@ -274,7 +266,11 @@ def test(do_log):
             f.write("\n--------------------------\n")
     print([len(re) for re in res])
 
+def perform_test():
+    from main import read_data, make_records, divide_train_test
 
-#
-test(True)
-# evaluate()
+    df_pre, df_raw = read_data(data_path="../IrancellQA.xlsx")
+    cor = make_records(df_pre, df_raw)
+    train_records, test_records = divide_train_test(cor, 0.9)
+    test(train_records, True)
+# perform_test()
