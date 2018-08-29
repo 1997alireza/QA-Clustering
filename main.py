@@ -11,7 +11,7 @@ from clustering_test import preform_test
 def read_data(data_path):
     df_pre = pd.read_excel(data_path, sheet_name='preprocessed')
     df_raw = pd.read_excel(data_path, sheet_name='Raw')
-    return df_pre[:500], df_raw[:500]
+    return df_pre, df_raw
 
 
 def make_records(df_pre, df_raw):
