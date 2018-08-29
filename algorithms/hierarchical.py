@@ -60,9 +60,8 @@ def hierarchical(records):
     hierarchical_model = create_hierarchical_model(n_clusters=number_of_topics, linkage='ward', affinity='euclidean')
     model = hierarchical_model.fit(docs_tfidf.toarray())
     labels = model.labels_
-    print(labels)
     clusters = create_cluster_members(labels=labels, records=records, number_of_topics=number_of_topics)
-    plt.title('Hierarchical Clustering Dendrogram')
-    plot_dendrogram(model, labels=model.labels_)
-    plt.show()
+    # plt.title('Hierarchical Clustering Dendrogram')
+    # plot_dendrogram(model, labels=model.labels_)
+    # plt.show()
     return clusters
