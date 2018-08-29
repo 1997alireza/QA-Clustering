@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import AgglomerativeClustering
 from scipy.cluster.hierarchy import dendrogram
 
-from tools import load_stop_words
+from tools import load_stop_words, make_corpus
 
 
 # tfidf model
@@ -36,14 +36,14 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 
-def create_cluster_members(labels, corpus, number_of_topics):
+def create_cluster_members(labels, records, number_of_topics):
     clusters = []
     for i in range(number_of_topics):
         cluster = Cluster("")
         for j in range(len(labels)):
             if labels[j] == i:
-                cluster.add_doc(j, corpus[j])
-        cluster.title = cluster.documents[0][1]
+                cluster.records.append(records[j])
+        cluster.title = cluster.records[0].a_raw
         clusters.append(cluster)
 
     return clusters
@@ -53,14 +53,15 @@ def create_hierarchical_model(n_clusters, linkage, affinity):
     return AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage, affinity=affinity)
 
 
-def hierarchical(corpus):
+def hierarchical(records):
+    corpus = make_corpus(records=records)
     number_of_topics = 10
     docs_tfidf, _ = create_transformed_model(corpus)
     hierarchical_model = create_hierarchical_model(n_clusters=number_of_topics, linkage='ward', affinity='euclidean')
     model = hierarchical_model.fit(docs_tfidf.toarray())
     labels = model.labels_
     print(labels)
-    clusters = create_cluster_members(labels=labels, corpus=corpus, number_of_topics=number_of_topics)
+    clusters = create_cluster_members(labels=labels, records=records, number_of_topics=number_of_topics)
     plt.title('Hierarchical Clustering Dendrogram')
     plot_dendrogram(model, labels=model.labels_)
     plt.show()

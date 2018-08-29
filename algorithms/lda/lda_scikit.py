@@ -3,7 +3,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.decomposition import LatentDirichletAllocation
 from cluster import Cluster
-from tools import load_stop_words
+from tools import load_stop_words, make_corpus
 
 
 # Get the docs & make Bag of Words of them
@@ -17,7 +17,8 @@ def create_bow(corpus):
     return docs_bag_of_words, docs_bag_of_words_feature_names, docs_bag_of_words_tfidf
 
 
-def lda_scikit(corpus):
+def lda_scikit(records):
+    corpus = make_corpus(records=records)
     bow, bow_feature_names, bow_tfidf = create_bow(corpus)
     lda = LatentDirichletAllocation(n_components=60, learning_method='online').fit(bow)
     topic_to_docs = lda.transform(bow)
@@ -31,7 +32,7 @@ def lda_scikit(corpus):
         cluster = Cluster(title[0])
         top_doc_indices = np.argsort(topic_to_docs[:, topic_idx])[::-1][0:no_top_documents]
         for doc_index in top_doc_indices:
-            cluster.add_doc(doc_index, corpus[doc_index])
+            cluster.records.append(records[doc_index])
         clusters.append(cluster)
 
     return clusters

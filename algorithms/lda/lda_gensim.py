@@ -2,7 +2,7 @@
 # from xlrd import open_workbook
 import gensim
 from nltk.tokenize import RegexpTokenizer
-from tools import load_stop_words
+from tools import load_stop_words, make_corpus
 from cluster import Cluster
 
 
@@ -104,7 +104,8 @@ def get_tfidf_matrix(bow_matrix, id2word):
 train_bow_matrix, test_bow_matrix, dictionary = [None] * 3
 
 
-def lda_gensim(corpus):
+def lda_gensim(records):
+    corpus = make_corpus(records)
     global train_bow_matrix, test_bow_matrix, dictionary
     tokens_set = get_tokens(corpus)
     set_length = len(tokens_set)
