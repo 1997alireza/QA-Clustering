@@ -49,37 +49,6 @@ def load_stop_words():
 sw = load_stop_words()
 
 
-# def load_data(path):
-#     global data, preproc, raw, precols, rawcols, soal, javab
-#     global records_numb, sw
-#     global answers_test, questions_test, answers_train, questions_train
-#
-# data = pd.ExcelFile(path)
-#     preproc = data.parse('preprocessed')
-#     raw = data.parse('Raw')
-#     preproc = preproc.applymap(str)
-#     raw = raw.applymap(str)
-#     precols = preproc.columns
-#     rawcols = raw.columns
-#     soal = 0
-#     javab = 1
-#     records_numb = len(preproc[precols[javab]])
-#     sw = load_stop_words()
-#     answers_train, questions_train = [], []
-#     answers_test, questions_test = [], []
-#     for i in range(0, Config.train_size):
-#         a_pre = preproc[precols[javab]][i]
-#         q_pre = preproc[precols[soal]][i]
-#         answers_train.append(a_pre)
-#         questions_train.append(q_pre)
-#     for i in range(1, Config.test_size):
-#         i += Config.train_size
-#         a_pre = preproc[precols[javab]][i]
-#         q_pre = preproc[precols[soal]][i]
-#         answers_test.append(a_pre)
-#         questions_test.append(q_pre)
-
-
 # def evaluate():
 #     print("Loading Data...")
 #     load_data('../IrancellQA.xlsx')
@@ -115,16 +84,9 @@ class DocRepo:
 
     def addDocument(self, id):
         global answers_train
-        # preQ = preproc[precols[soal]][id]
-        # rawQ = raw[rawcols[soal]][id]
-        # rawA = raw[rawcols[javab]][id]
-        # preA = preproc[precols[javab]][id]
         preA = answers_train[id]
         doc = Document()
-        # doc.add(TextField("rq", rawQ, Field.Store.YES))
-        # doc.add(TextField("pq", preQ, Field.Store.YES))
         doc.add(TextField("pa", preA, Field.Store.YES))
-        # doc.add(TextField("ra", rawA, Field.Store.YES))
         doc.add(StringField("id", str(id), Field.Store.YES))
         self.w.addDocument(doc)
         self.w.commit()
@@ -132,24 +94,7 @@ class DocRepo:
     def __del__(self):
         self.w.close()
 
-    # def get_nearest_question(self, question):
-    #     query_builder = BooleanQuery.Builder()
-    #     for token in question.split(' '):
-    #         if token not in sw:
-    #             qtq = TermQuery(Term("pq", token))
-    #             query_builder.add(BooleanClause(qtq, BooleanClause.Occur.SHOULD))
-    #     q = query_builder.build()
-    #     hitsPerPage = 2
-    #     reader = DirectoryReader.open(self.w)
-    #     self.searcher = IndexSearcher(reader)
-    #     simi = BM25Similarity(Config.k1, Config.b)
-    #     # simi = ClassicSimilarity()
-    #     self.searcher.setSimilarity(simi)
-    #
-    #     docs = self.searcher.search(q, hitsPerPage)
-    #     hits = docs.scoreDocs
-    #     if len(hits) > 0:
-    #         return (self.searcher.doc(hits[0].doc)).get('id')
+
 
     def get_most_similar(self, sentence, do_log=False):
         # print('query string is',string)
@@ -183,8 +128,6 @@ class DocRepo:
 def do_cluster(threshold, do_log=False):
     global answers_train
     clusters = []
-    # repo = DocRepo(path)
-    # random.shuffle(answers_train)
     global flags
     flags = []
     for i in range(0, len(answers_train)):
