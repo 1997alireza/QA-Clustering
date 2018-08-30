@@ -53,14 +53,13 @@ def create_hierarchical_model(n_clusters, linkage, affinity):
     return AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage, affinity=affinity)
 
 
-def hierarchical(records):
+def hierarchical(records, number_of_clusters):
     corpus = make_corpus(records=records)
-    number_of_topics = 10
     docs_tfidf, _ = create_transformed_model(corpus)
-    hierarchical_model = create_hierarchical_model(n_clusters=number_of_topics, linkage='ward', affinity='euclidean')
+    hierarchical_model = create_hierarchical_model(n_clusters=number_of_clusters, linkage='ward', affinity='euclidean')
     model = hierarchical_model.fit(docs_tfidf.toarray())
     labels = model.labels_
-    clusters = create_cluster_members(labels=labels, records=records, number_of_topics=number_of_topics)
+    clusters = create_cluster_members(labels=labels, records=records, number_of_topics=number_of_clusters)
     # plt.title('Hierarchical Clustering Dendrogram')
     # plot_dendrogram(model, labels=model.labels_)
     # plt.show()

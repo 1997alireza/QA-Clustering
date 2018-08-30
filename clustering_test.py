@@ -25,7 +25,7 @@ def preform_test(clusters, test_records, distance_algorithm, clustering_algorith
     print("Mean = ", np.mean(distances), " Variance = ", np.var(distances), "\n", distances)
     plt.hist(distances, bins=range(0, 50))
     plt.title("Histogram of " + clustering_algorithm_name + " algorithm with " + distance_algorithm_name,)
-    plt.xlabel("Value")
+    plt.xlabel("Difference")
     plt.ylabel("Frequency")
     plt.show()
 

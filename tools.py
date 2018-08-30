@@ -5,13 +5,14 @@ def load_stop_words():
     return stopwords
 
 
-def get_clusters(algorithm, corpus):
+def get_clusters(algorithm, corpus, number_of_clusters):
     """
     :param algorithm: a function that get a path and return the clusters
     :param corpus: an array of documents
+    :param number_of_clusters: number of clusters that should be make
     :return: a list of Cluster objects
     """
-    return algorithm(corpus)
+    return algorithm(corpus, number_of_clusters)
 
 
 def make_corpus(records):

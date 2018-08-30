@@ -87,7 +87,7 @@ def get_tfidf_matrix(bow_matrix, id2word):
 train_bow_matrix, test_bow_matrix, dictionary = [None] * 3
 
 
-def lda_gensim(records):
+def lda_gensim(records, number_of_clusters):
     global train_bow_matrix, test_bow_matrix, dictionary
     tokens_set = get_tokens(records)
     set_length = len(tokens_set)
@@ -102,4 +102,4 @@ def lda_gensim(records):
     # log_perplexities = calculate_perplexities(range(1, 5000), show_graph=True, tfidf_model=True)
     # print(log_perplexities)
 
-    return make_lda_model(train_bow_matrix, test_bow_matrix, 10, dictionary, records, tfidf_model=False)
+    return make_lda_model(train_bow_matrix, test_bow_matrix, number_of_clusters, dictionary, records, tfidf_model=False)

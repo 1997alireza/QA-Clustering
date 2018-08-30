@@ -2,6 +2,7 @@ import random
 
 import pandas as pd
 from algorithms.hierarchical import hierarchical
+from algorithms.incremental import incremental
 from algorithms.lda.lda import get_lda
 from record import Record
 from tools import get_clusters
@@ -37,11 +38,12 @@ def divide_train_test(records, train_percent):
 if __name__ == '__main__':
     data_path = "QA-samples.xlsx"
     train_percent = 0.9
+    number_of_clusters = 150
     df_pre, df_raw = read_data(data_path=data_path)
     records = make_records(df_pre=df_pre, df_raw=df_raw)
     train_records, test_records = divide_train_test(records=records, train_percent=train_percent)
-    clusters = get_clusters(hierarchical, train_records)
-    preform_test(clusters, test_records, euclidean_distance, clustering_algorithm_name="hierarchical",
+    clusters = get_clusters(get_lda(False), train_records, number_of_clusters)
+    preform_test(clusters, test_records, euclidean_distance, clustering_algorithm_name="LDA -scikit",
                  distance_algorithm_name="euclidean")
     top_n_docs = 8
     # for x in clusters:

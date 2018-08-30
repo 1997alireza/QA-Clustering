@@ -17,10 +17,10 @@ def create_bow(corpus):
     return docs_bag_of_words, docs_bag_of_words_feature_names, docs_bag_of_words_tfidf
 
 
-def lda_scikit(records):
+def lda_scikit(records, number_of_clusters):
     corpus = make_corpus(records=records)
     bow, bow_feature_names, bow_tfidf = create_bow(corpus)
-    lda = LatentDirichletAllocation(n_components=60, learning_method='online').fit(bow)
+    lda = LatentDirichletAllocation(n_components=number_of_clusters, learning_method='online').fit(bow)
     topic_to_docs = lda.transform(bow)
 
     clusters = []
