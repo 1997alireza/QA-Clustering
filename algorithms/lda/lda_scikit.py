@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.decomposition import LatentDirichletAllocation
-from cluster import Cluster
+from cluster import LDACluster
 from tools import load_stop_words, make_corpus
 
 
@@ -29,10 +29,10 @@ def lda_scikit(records, number_of_clusters):
 
     for topic_idx, topic in enumerate(lda.components_):
         title = [bow_feature_names[i] for i in topic.argsort()[:-no_top_words - 1:-1]]
-        cluster = Cluster(title[0])
+        cluster = LDACluster(title[0])
         top_doc_indices = np.argsort(topic_to_docs[:, topic_idx])[::-1][0:no_top_documents]
         for doc_index in top_doc_indices:
-            cluster.records.append(records[doc_index])
+            cluster.add_record(records[doc_index])
         clusters.append(cluster)
 
     return clusters

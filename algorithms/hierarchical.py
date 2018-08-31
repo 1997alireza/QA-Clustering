@@ -2,7 +2,7 @@ import numpy as np
 from cluster import Cluster
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from sklearn.cluster import AgglomerativeClustering
 from scipy.cluster.hierarchy import dendrogram
 
@@ -42,8 +42,8 @@ def create_cluster_members(labels, records, number_of_topics):
         cluster = Cluster("")
         for j in range(len(labels)):
             if labels[j] == i:
-                cluster.records.append(records[j])
-        cluster.title = cluster.records[0].a_raw
+                cluster.add_record(records[j])
+        cluster.title = cluster.get_records()[0].a_raw
         clusters.append(cluster)
 
     return clusters

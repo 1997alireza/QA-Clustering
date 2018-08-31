@@ -156,7 +156,8 @@ def incremental(train_records, num_clusters):
     for cl in res:
         cll = Cluster(train_records[cl[0]])
         for numb in cl:
-            cll.records.append(train_records[numb])
+            # cll.records.append(train_records[numb])
+            cll.add_record(train_records[numb])
             # cll.add_doc((numb, answers_train[numb]))
         cluss.append(cll)
     return cluss
