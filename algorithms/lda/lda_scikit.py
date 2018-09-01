@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.decomposition import LatentDirichletAllocation
-from cluster import Cluster
+from cluster import LDACluster
 from tools import load_stop_words, make_corpus
 
 
@@ -17,10 +17,10 @@ def create_bow(corpus):
     return docs_bag_of_words, docs_bag_of_words_feature_names, docs_bag_of_words_tfidf
 
 
-def lda_scikit(records):
+def lda_scikit(records, number_of_clusters):
     corpus = make_corpus(records=records)
     bow, bow_feature_names, bow_tfidf = create_bow(corpus)
-    lda = LatentDirichletAllocation(n_components=60, learning_method='online').fit(bow)
+    lda = LatentDirichletAllocation(n_components=number_of_clusters, learning_method='online').fit(bow)
     topic_to_docs = lda.transform(bow)
 
     clusters = []
@@ -29,10 +29,10 @@ def lda_scikit(records):
 
     for topic_idx, topic in enumerate(lda.components_):
         title = [bow_feature_names[i] for i in topic.argsort()[:-no_top_words - 1:-1]]
-        cluster = Cluster(title[0])
+        cluster = LDACluster(title[0])
         top_doc_indices = np.argsort(topic_to_docs[:, topic_idx])[::-1][0:no_top_documents]
         for doc_index in top_doc_indices:
-            cluster.records.append(records[doc_index])
+            cluster.add_record(records[doc_index])
         clusters.append(cluster)
 
     return clusters

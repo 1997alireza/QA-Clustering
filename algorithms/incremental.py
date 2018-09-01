@@ -30,8 +30,8 @@ import numpy as np
 
 
 class Config:
-    stop_words_address = 'incremental_stopwords.txt'
-    # stop_words_address = '../persian-stopwords.txt'
+    # stop_words_address = 'incremental_stopwords.txt'
+    stop_words_address = 'persian-stopwords.txt'
     k1 = 1.2
     b = 0.75
     threshold = 5.0
@@ -146,7 +146,7 @@ def do_cluster(threshold, do_log=False):
 from cluster import Cluster
 
 
-def incremental(train_records):
+def incremental(train_records, num_clusters):
     # load_data(path)
     global answers_train
     answers_train = [rec.a_pre for rec in train_records]
@@ -156,7 +156,8 @@ def incremental(train_records):
     for cl in res:
         cll = Cluster(train_records[cl[0]])
         for numb in cl:
-            cll.records.append(train_records[numb])
+            # cll.records.append(train_records[numb])
+            cll.add_record(train_records[numb])
             # cll.add_doc((numb, answers_train[numb]))
         cluss.append(cll)
     return cluss
@@ -200,6 +201,6 @@ def perform_test():
     test(train_records, True)
 
 
-perform_test()
+# perform_test()
 # evaluate()
 
