@@ -24,15 +24,20 @@ def lda_scikit(records, number_of_clusters):
     topic_to_docs = lda.transform(bow)
 
     clusters = []
-    no_top_documents = 10
     no_top_words = 10
 
     for topic_idx, topic in enumerate(lda.components_):
         title = [bow_feature_names[i] for i in topic.argsort()[:-no_top_words - 1:-1]]
         cluster = LDACluster(title[0])
-        top_doc_indices = np.argsort(topic_to_docs[:, topic_idx])[::-1][0:no_top_documents]
-        for doc_index in top_doc_indices:
-            cluster.add_record(records[doc_index])
         clusters.append(cluster)
+
+    for doc_index in range(len(records)):
+        possibility = 0
+        best_cluster_index = 0 
+        for topic_index in range(number_of_clusters):
+            if(topic_to_docs[doc_index, topic_index] > possibility):
+                possibility = topic_to_docs[doc_index, topic_index]
+                best_cluster_index = topic_index
+        clusters[best_cluster_index].add_record_psb(records[doc_index], possibility)
 
     return clusters
