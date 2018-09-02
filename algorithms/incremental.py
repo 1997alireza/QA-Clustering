@@ -28,18 +28,16 @@ from random import randint
 import matplotlib.pyplot as plt
 import numpy as np
 
+# from main import read_data, make_records, divide_train_test
+
 
 class Config:
     # stop_words_address = 'incremental_stopwords.txt'
     stop_words_address = 'persian-stopwords.txt'
     k1 = 1.2
     b = 0.75
-    threshold = 5.0
-    train_size = 10000
-    test_size = 4000
+    threshold = 17.0
 
-
-lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
 
 def load_stop_words():
@@ -48,9 +46,11 @@ def load_stop_words():
 
 sw = load_stop_words()
 
+lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
 
 class DocRepo:
+
     def __init__(self):
         # self.analyzer = StandardAnalyzer()
         # self.analyzer = PersianAnalyzer(StopFilter.makeStopSet(sw))
@@ -72,7 +72,6 @@ class DocRepo:
     def __del__(self):
         self.w.close()
 
-        
     def get_most_similar(self, sentence, do_log=False):
         # print('query string is',string)
         # q = QueryParser('pa', self.analyzer).parse(sentence)
@@ -120,7 +119,7 @@ def do_cluster(threshold, do_log=False):
         if closest is not None:
             scores.append(closest.score)
         if (closest is not None) and (closest.score >= threshold):
-                best_matching_cluster = flags[mate]
+            best_matching_cluster = flags[mate]
         if best_matching_cluster == -1:
             clusters.append([])
             clusters[-1].append(senidx)
@@ -152,6 +151,7 @@ def incremental(train_records, num_clusters):
     answers_train = [rec.a_pre for rec in train_records]
 
     res, repo = do_cluster(Config.threshold)
+    res = [cl for cl in res if len(cl) > 1]
     cluss = []
     for cl in res:
         cll = Cluster(train_records[cl[0]])
@@ -169,11 +169,13 @@ def test(train_records, do_log):
     global answers_train
     answers_train = [rec.a_pre for rec in train_records]
     res, repo = do_cluster(Config.threshold, do_log)
+    ones = [cl for cl in res if len(cl) == 1]
+    res = [cl for cl in res if len(cl) > 1]
+
     i = 0
     os.makedirs("clusters")
-    print(len(res))
-    print(len([re for re in res if len(re) == 1]))
-    ones = [cl for cl in res if len(cl) == 1]
+    print('number of clusters :', len(res))
+    print('removed records :', len(ones))
     for cl in res:
         i += 1
         with open("clusters/" + str(i) + ".txt", 'w', encoding='utf-8') as f:
@@ -188,19 +190,5 @@ def test(train_records, do_log):
             f.write("\n--------------------------\n")
     print([len(re) for re in res])
 
-def perform_test():
-    from main import read_data, make_records, divide_train_test
 
-
-def perform_test():
-    from main import read_data, make_records, divide_train_test
-
-    df_pre, df_raw = read_data(data_path="../IrancellQA.xlsx")
-    cor = make_records(df_pre, df_raw)
-    train_records, test_records = divide_train_test(cor, 1.0)
-    test(train_records, True)
-
-
-# perform_test()
-# evaluate()
 
