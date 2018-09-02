@@ -21,11 +21,10 @@ def make_corpus(records):
 
 import requests
 import json
-from record import Record
+from statics import email, api_key
 
-api_key = "eJGlFIowIM"
-createUrl = "http://api.diaalog.ir/chatbot/intents/create?user=torabian.alireza@gmail.com&api_key=" + api_key
-buildUrl = "http://api.diaalog.ir/chatbot/build?user=torabian.alireza@gmail.com&api_key=" + api_key
+createUrl = "http://api.diaalog.ir/chatbot/intents/create?user=" + email + "&api_key=" + api_key
+buildUrl = "http://api.diaalog.ir/chatbot/build?user=" + email + "&api_key=" + api_key
 
 
 def make_dialog(records, title):
@@ -42,8 +41,8 @@ def make_dialog(records, title):
     print('trainingData', trainingData)
 
     data = {'apiTrigger': False,
-            'botName': 'torabian.alireza@gmail.com',
-            'intentId': title + '_dialog_torabian.alireza@gmail.com',
+            'botName': email,
+            'intentId': title + '_dialog_' + email,
             'labeledSentences': [],
             'name': title,
             'parameters': [],
@@ -59,7 +58,7 @@ def make_dialog(records, title):
     id = json_response['_id']
     print('ID is :', id)
 
-    trainAPI = "http://api.diaalog.ir/chatbot/train/" + id + "?user=torabian.alireza@gmail.com&api_key=" + api_key
+    trainAPI = "http://api.diaalog.ir/chatbot/train/" + id + "?user=" + email + "&api_key=" + api_key
 
     data2 = trainingData
     r2 = requests.post(url=trainAPI, json=data2)
@@ -79,7 +78,7 @@ def build():
 
 
 def delete_dialog(id, do_build=True):
-    delete = "http://api.diaalog.ir/chatbot/intents/" + id + "?user=torabian.alireza@gmail.com&api_key=" + api_key
+    delete = "http://api.diaalog.ir/chatbot/intents/" + id + "?user=" + email + "&api_key=" + api_key
     r = requests.delete(url=delete)
     print('delete :', r)
     if do_build:
@@ -87,7 +86,7 @@ def delete_dialog(id, do_build=True):
 
 
 def delete_all_dialogs():
-    r = requests.get(url="http://api.diaalog.ir/chatbot/intents?user=torabian.alireza@gmail.com&api_key=" + api_key)
+    r = requests.get(url="http://api.diaalog.ir/chatbot/intents?user=" + email + "&api_key=" + api_key)
     print(r)
     json_res = json.loads(r.content)
     id_list = [lis['_id']['$oid'] for lis in json_res]
