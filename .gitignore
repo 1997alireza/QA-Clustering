@@ -106,3 +106,4 @@ venv.bak/
 *.xlsx
 *.png
 test*.py
+statics.py
