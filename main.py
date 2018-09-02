@@ -37,8 +37,8 @@ def divide_train_test(records, train_percent):
 
 if __name__ == '__main__':
     data_path = "QA-samples.xlsx"
-    train_percent = 0.9
-    number_of_clusters = 150
+    train_percent = 0.8
+    number_of_clusters = 900
     df_pre, df_raw = read_data(data_path=data_path)
     records = make_records(df_pre=df_pre, df_raw=df_raw)
     train_records, test_records = divide_train_test(records=records, train_percent=train_percent)
@@ -46,8 +46,4 @@ if __name__ == '__main__':
     is_lda = clustering_algorithm == get_lda(True) or clustering_algorithm == get_lda(False)
     clusters = get_clusters(clustering_algorithm, train_records, number_of_clusters)
     preform_test(clusters, test_records, euclidean_distance, clustering_algorithm_name=clustering_algorithm.__name__,
-                 is_lda=is_lda)
-    top_n_docs = 8
-    # for x in clusters:
-    #     x.print(top_n_docs, True)
-    #     print("-------------\n")
+                 is_lda=is_lda, number_of_clusters = number_of_clusters )

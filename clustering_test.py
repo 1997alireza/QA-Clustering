@@ -6,7 +6,7 @@ from nltk.metrics import edit_distance
 
 
 # preform test and plot record
-def preform_test(clusters, test_records, distance_algorithm, clustering_algorithm_name, is_lda=False):
+def preform_test(clusters, test_records, distance_algorithm, clustering_algorithm_name, is_lda=False,number_of_clusters =0):
     distances = []
     for i in range(len(test_records)):
         min_questions_dist = 10000000
@@ -28,9 +28,9 @@ def preform_test(clusters, test_records, distance_algorithm, clustering_algorith
             random.randint(0, max_records_index)].a_pre
         distances.append(distance_algorithm(recommended_answer, test_records[i].a_pre))
 
-    print("Mean = ", np.mean(distances), " Variance = ", np.var(distances), "\n", distances)
-    plt.hist(distances, bins=range(0, 50))
-    plt.title("Histogram of " + clustering_algorithm_name + " algorithm with " + distance_algorithm.__name__,)
+    print("Mean = ", np.mean(distances), " Variance = ", np.var(distances), "\n")
+    plt.hist(distances, bins=range(0, 60))
+    plt.title("Histogram of " + clustering_algorithm_name + " algorithm with " + distance_algorithm.__name__ + str(number_of_clusters))
     plt.xlabel("Difference")
     plt.ylabel("Frequency")
     plt.show()
