@@ -94,6 +94,3 @@ def delete_all_dialogs():
     for i in range(3, len(id_list)):
         delete_dialog(id_list[i], False)
     build()
-
-
-delete_all_dialogs()
