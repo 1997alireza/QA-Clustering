@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <title>Conversation</title>
+    </head>
+
+    <body>
+
+        <input type="text" id="query" placeholder="Ask me ..."/>
+        <br/> <br/>
+        <div id="conversation"></div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+        <script>
+            $("#query").keypress(function(e){
+                if(e.which === 13) {
+                    var text = $(this).val();
+                    $.ajax({
+                        url: "/answers",
+                        type: "get",
+                        data: {question: text},
+                        success: function (response) {
+                            $("#conversation").html(response);
+                        },
+                        error: function (xhr) {
+                        }
+                    });
+                }
+            });
+        </script>
+
+    </body>
+
+</html>
