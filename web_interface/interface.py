@@ -32,7 +32,7 @@ def initialize_clustering(data_path, train_percent, clustering_algorithm, number
 
 
 if __name__ == '__main__':
-    data_path = "../QA-samples-reduced.xlsx"
+    data_path = "../QA-samples.xlsx"
     train_percent = 0.8
     number_of_clusters = 900
     clustering_algorithm = get_lda(False)
