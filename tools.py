@@ -3,11 +3,12 @@ from record import Record
 import pandas as pd
 import requests
 import json
+import os
 from statics import email, api_key
 
 
-def load_stop_words():
-    stopwords_file = open('../persian-stopwords.txt', 'r', encoding='utf8')
+def load_stop_words(path=os.path.realpath(os.path.join(__file__, '../persian-stopwords.txt'))):
+    stopwords_file = open(path, 'r', encoding='utf8')
     stopwords = stopwords_file.read().split('\n')
     stopwords_file.close()
     return stopwords

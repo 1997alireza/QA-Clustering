@@ -2,9 +2,9 @@ from flask import Flask, render_template, request
 import requests
 from bs4 import BeautifulSoup
 
-from tools import make_records, read_data, divide_train_test, get_clusters, get_answer
+from tools import make_records, read_data, divide_train_test, get_clusters, get_answer, load_stop_words
 from algorithms.hierarchical import hierarchical
-# from algorithms.incremental import incremental
+from algorithms.incremental import incremental
 from algorithms.lda.lda import get_lda
 from similarity_algorithms import euclidean_distance
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     data_path = "../QA-samples.xlsx"
     train_percent = 0.8
     number_of_clusters = 900
-    clustering_algorithm = get_lda(False)
+    clustering_algorithm = incremental
 
     clusters = initialize_clustering(data_path, train_percent, clustering_algorithm, number_of_clusters)
     is_lda = clustering_algorithm == get_lda(True) or clustering_algorithm == get_lda(False)

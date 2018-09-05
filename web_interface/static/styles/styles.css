@@ -15,6 +15,7 @@ body {
 .answer {
     border-color: #ccc;
     background-color: #ccc;
+    direction: rtl;
 }
 
 .container::after {

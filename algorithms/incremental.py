@@ -26,28 +26,24 @@ from org.apache.lucene.analysis.fa import PersianAnalyzer
 import pandas as pd
 from random import randint
 import matplotlib.pyplot as plt
+from tools import load_stop_words
 import numpy as np
 from cluster import Cluster
+import os
 
 # from main import read_data, make_records, divide_train_test
 
 
 class Config:
     # stop_words_address = 'incremental_stopwords.txt'
-    stop_words_address = 'persian-stopwords.txt'
+    stop_words_address = os.path.realpath(os.path.join(__file__, '../../persian-stopwords.txt'))
     k1 = 1.2
     b = 0.75
     threshold = 17.0
 
 
-def load_stop_words():
-    return [(x.strip()) for x in open(Config.stop_words_address, 'r', encoding='utf8').read().split('\n')]
-
-
-sw = load_stop_words()
-
-lucene.initVM(vmargs=['-Djava.awt.headless=true'])
-
+# def load_stop_words():
+#     return [(x.strip()) for x in open(Config.stop_words_address, 'r', encoding='utf8').read().split('\n')]
 
 class DocRepo:
 
@@ -142,7 +138,15 @@ def do_cluster(threshold, do_log=False):
     return clusters, repo
 
 
+sw = None
+
+
 def incremental(train_records, num_clusters):
+    global sw
+    sw = load_stop_words(Config.stop_words_address)
+
+    lucene.initVM(vmargs=['-Djava.awt.headless=true'])
+
     # load_data(path)
     global answers_train
     answers_train = [rec.a_pre for rec in train_records]
