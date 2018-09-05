@@ -27,6 +27,7 @@ import pandas as pd
 from random import randint
 import matplotlib.pyplot as plt
 import numpy as np
+from cluster import Cluster
 
 # from main import read_data, make_records, divide_train_test
 
@@ -37,7 +38,6 @@ class Config:
     k1 = 1.2
     b = 0.75
     threshold = 17.0
-
 
 
 def load_stop_words():
@@ -140,9 +140,6 @@ def do_cluster(threshold, do_log=False):
     print(np.var(scores))
 
     return clusters, repo
-
-
-from cluster import Cluster
 
 
 def incremental(train_records, num_clusters):

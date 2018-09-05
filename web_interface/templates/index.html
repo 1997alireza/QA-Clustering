@@ -4,28 +4,34 @@
 
     <head>
         <title>Conversation</title>
+        <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='styles/styles.css') }}">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/element_generator.js') }}"></script>
     </head>
 
     <body>
-
-        <input type="text" id="query" placeholder="Ask me ..."/>
-        <br/> <br/>
         <div id="conversation"></div>
-
+        <div id="footer">
+            <input type="text" id="query" placeholder="بپرس ..."/>
+        </div>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
         <script>
             $("#query").keypress(function(e){
                 if(e.which === 13) {
                     var text = $(this).val();
+                    this.value = '';
+                    $("#conversation").append(getQuestionElement(text));
+                    document.getElementById("query").scrollIntoView();
                     $.ajax({
                         url: "/answers",
                         type: "get",
                         data: {question: text},
                         success: function (response) {
-                            $("#conversation").html(response);
+                            $("#conversation").append(getAnswerElement(response));
+                            $('html, body').animate({scrollTop:$(document).height()}, 'slow');
                         },
                         error: function (xhr) {
+                            $('html, body').animate({scrollTop:$(document).height()}, 'slow');
                         }
                     });
                 }
